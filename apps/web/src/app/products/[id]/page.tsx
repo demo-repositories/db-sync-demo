@@ -46,8 +46,6 @@ export default async function ProductIdPage({
 }) {
   const { id } = await params;
   const { data } = await fetchProductIdPageData(id);
-  console.log("id", id);
-  console.log("data", data);
   if (!data) return notFound();
   const { name, description } = data ?? {};
 
