@@ -210,9 +210,18 @@ export const queryBlogSlugPageData = defineQuery(/* groq */ `
     ${pageBuilderFragment}
   }
 `);
+export const queryProductIdPageData = defineQuery(/* groq */ `
+  *[_type == "product" && id == $id][0]{
+    ...,
+
+  }
+`);
 
 export const queryBlogPaths = defineQuery(`
   *[_type == "blog" && defined(slug.current)].slug.current
+`);
+export const queryProductPaths = defineQuery(`
+  *[_type == "product" && defined(id)].id
 `);
 
 const ogFieldsFragment = /* groq */ `
