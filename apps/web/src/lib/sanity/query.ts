@@ -211,9 +211,11 @@ export const queryBlogSlugPageData = defineQuery(/* groq */ `
   }
 `);
 export const queryProductIdPageData = defineQuery(/* groq */ `
-  *[_type == "product" && id == $id][0]{
-    ...,
-
+  *[_type == "productPage" && references($_id)][0]{
+    product->{
+      name
+    },
+    description
   }
 `);
 
@@ -221,7 +223,9 @@ export const queryBlogPaths = defineQuery(`
   *[_type == "blog" && defined(slug.current)].slug.current
 `);
 export const queryProductPaths = defineQuery(`
-  *[_type == "product" && defined(id)].id
+  *[_type == "productPage" && defined(product)]{
+   "id":product->id
+  }.id
 `);
 
 const ogFieldsFragment = /* groq */ `

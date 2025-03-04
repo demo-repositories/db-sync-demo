@@ -7,6 +7,7 @@ import { homePage } from "./home-page";
 import { navbar } from "./navbar";
 import { page } from "./page";
 import { productType } from "./product";
+import { productPageType } from "./product-page";
 import { scormType } from "./scorm";
 import { settings } from "./settings";
 export const singletons = [homePage, blogIndex, settings, footer, navbar];
@@ -18,5 +19,6 @@ export const documents = [
   author,
   productType,
   scormType,
+  productPageType,
   ...singletons,
 ];

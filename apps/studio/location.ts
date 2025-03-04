@@ -53,4 +53,21 @@ export const locations = {
       };
     },
   }),
+  // productPage: defineLocations({
+  //   select: {
+  //     name: "product->{name}",
+  //     id: "id",
+  //   },
+  //   resolve: (doc) => {
+  //     console.log("doc", doc);
+  //     return {
+  //       locations: [
+  //         {
+  //           title: doc?.name || "Untitled",
+  //           href: `/products/${parseInt(doc?.id)}`,
+  //         },
+  //       ],
+  //     };
+  //   },
+  // }),
 };
