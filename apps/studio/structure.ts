@@ -115,12 +115,6 @@ export const structure = (
       createList({ S, type: "author", title: "Authors", icon: User }),
       S.divider(),
       createList({ S, type: "product", title: "Products", icon: Barcode }),
-      createList({
-        S,
-        type: "productPage",
-        title: "Product Pages",
-        icon: PanelsTopLeft,
-      }),
       S.divider(),
       createList({ S, type: "scorm", title: "Scorm", icon: FileArchive }),
       S.divider(),
