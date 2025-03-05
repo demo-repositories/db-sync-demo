@@ -160,6 +160,25 @@ export async function createClient() {
 }
 ```
 
+Update `./apps/web/src/lib/sanity/token.ts` to include the write token:
+
+```typescript
+// ./apps/web/src/lib/sanity/token.ts
+import "server-only";
+
+export const token = process.env.SANITY_API_READ_TOKEN;
+
+if (!token) {
+  throw new Error("Missing SANITY_API_READ_TOKEN");
+}
+
+export const writeToken = process.env.SANITY_API_WRITE_TOKEN;
+
+if (!writeToken) {
+  throw new Error("Missing SANITY_API_WRITE_TOKEN");
+}
+```
+
 In `./apps/web/.env.local` add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Supabase.
 
 ```env
