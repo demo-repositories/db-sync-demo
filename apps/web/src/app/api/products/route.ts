@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Helper function to generate a Sanity document ID
-    const sanityId = (id) => `product-${id}`;
+    const sanityId = (id: string) => `product-${id}`;
 
     if (type === "DELETE") {
       // Delete product document from Sanity

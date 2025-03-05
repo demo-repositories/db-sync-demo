@@ -45,7 +45,195 @@ See the documentation if you are [having issues with the CLI](https://www.sanity
 npm create sanity@latest -- --template robotostudio/turbo-start-sanity
 ```
 
-#### 2. Run Studio and Next.js app locally
+Install additional deps
+
+```shell
+npm i @supabase/ssr @supabase/supabase-js --workspace=web
+```
+
+#### 2. Add files
+
+Add the following files to the project. In `./apps/web`
+
+```typescript
+// ./apps/web/src/app/api/products/route.ts
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+import { client as sanityClient } from "@/lib/sanity/client";
+import { writeToken } from "@/lib/sanity/token";
+
+// Configure Sanity client with a token for write operations
+const client = sanityClient.withConfig({ token: writeToken });
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { type, record, old_record } = body;
+    console.log("Received Supabase Webhook:", body);
+
+    if (!type) {
+      return NextResponse.json(
+        { error: "Invalid webhook data" },
+        { status: 400 }
+      );
+    }
+
+    // Helper function to generate a Sanity document ID
+    const sanityId = (id: string) => `product-${id}`;
+
+    if (type === "DELETE") {
+      // Delete product document from Sanity
+      await client.delete(sanityId(old_record.id));
+      return NextResponse.json({ message: "Product deleted" }, { status: 200 });
+    }
+
+    const { id } = record;
+
+    if (type === "INSERT" || type === "UPDATE") {
+      const docId = sanityId(id);
+
+      // Fetch existing document
+      const existingDoc = await client.getDocument(docId);
+
+      // Merge existing fields with the new data (new data takes precedence)
+      const updatedDoc = {
+        _id: docId,
+        _type: "product",
+        ...existingDoc, // Preserve existing fields
+        ...record, // Overwrite with new data
+      };
+
+      // Upsert product document in Sanity
+      const result = await client.createOrReplace(updatedDoc);
+
+      return NextResponse.json(
+        { message: "Product saved", product: result },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Unhandled event type" },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("Sanity Webhook Error:", error);
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+```typescript
+// ./apps/web/src/lib/supabase/server.ts
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  );
+}
+```
+
+In `./apps/web/.env.local` add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Supabase.
+
+```env
+# ...rest of environment variables
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Then in `./apps/studio`:
+
+```typescript
+// ./apps/studio/schemaTypes/documents/product.ts
+import { Barcode } from "lucide-react";
+import { defineField, defineType } from "sanity";
+
+export const productType = defineType({
+  type: "document",
+  name: "product",
+  icon: Barcode,
+
+  fields: [
+    defineField({
+      name: "name",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "created_at",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "updated_at",
+      type: "string",
+      readOnly: true,
+    }),
+    defineField({
+      name: "id",
+      type: "number",
+      readOnly: true,
+    }),
+  ],
+});
+```
+
+Update `./apps/studio/schemaTypes/documents/index.ts`:
+
+```typescript
+// ./apps/studio/schemaTypes/documents/index.ts
+import { author } from "./author";
+import { blog } from "./blog";
+import { blogIndex } from "./blog-index";
+import { faq } from "./faq";
+import { footer } from "./footer";
+import { homePage } from "./home-page";
+import { navbar } from "./navbar";
+import { page } from "./page";
+import { productType } from "./product";
+import { scormType } from "./scorm";
+import { settings } from "./settings";
+export const singletons = [homePage, blogIndex, settings, footer, navbar];
+
+export const documents = [
+  blog,
+  page,
+  faq,
+  author,
+  productType,
+  scormType,
+  ...singletons,
+];
+```
+
+#### 3. Run Studio and Next.js app locally
 
 Navigate to the template directory using `cd <your app name>`, and start the development servers by running the following command
 
@@ -53,7 +241,7 @@ Navigate to the template directory using `cd <your app name>`, and start the dev
 pnpm run dev
 ```
 
-#### 3. Open the app and sign in to the Studio
+#### 4. Open the app and sign in to the Studio
 
 Open the Next.js app running locally in your browser on [http://localhost:3000](http://localhost:3000).
 
