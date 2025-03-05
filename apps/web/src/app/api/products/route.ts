@@ -11,12 +11,16 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { type, record, old_record } = body;
+    console.log("Received Supabase Webhook:", body);
+
     if (!type) {
       return NextResponse.json(
         { error: "Invalid webhook data" },
         { status: 400 },
       );
     }
+
+    // Helper function to generate a Sanity document ID
     const sanityId = (id) => `product-${id}`;
 
     if (type === "DELETE") {
@@ -26,7 +30,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { id } = record;
-    console.log("Received Supabase Webhook:", { type, record });
 
     if (type === "INSERT" || type === "UPDATE") {
       const docId = sanityId(id);
